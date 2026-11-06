@@ -55,7 +55,7 @@ configs:
     file: web/default.conf
 
 x-wonton:
-  spec: "0.5"
+  spec: "0.6"
   id: ai.vllm.vllm
   version: 0.1.0
   kind: model
