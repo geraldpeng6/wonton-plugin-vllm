@@ -1,6 +1,9 @@
 # scripts/smoke.sh 的一项一项探测，跟着插件走。没写的项会 FAIL 并给出写法，不会默认放行。
 # shellcheck shell=bash disable=SC2034
 #（IDENTITY_NA、DATA_NA、SMOKE_NOTE 由套件 smoke.sh 读取，这里只赋值。）
+# 钩子只准用白名单里的东西：SMOKE_STATE/SMOKE_JAR/SMOKE_WEB_URL/SMOKE_OWNER/
+# SMOKE_BASE/SMOKE_TOKEN/SMOKE_INSTANCE 七个变量和 web_get、dweb 两个助手；
+# 不读 E2E_*，不调套件内部函数。本文件只用到 web_get。
 #
 # vLLM：sso=proxy，网关给每个已登录请求注入 `Authorization: Bearer <api_key>`；
 # vLLM 没有用户和登录体系（IDENTITY_NA=1），身份完全由核心网关的会话保证。
