@@ -10,4 +10,11 @@ IDENTITY_NA=1
 DATA_NA=1
 SMOKE_NOTE="vLLM 没有用户体系，也没有用户数据；模型缓存在数据目录，属运行缓存"
 
-web_assert() { grep -qi 'vllm'; }   # 标准输入：经网关打开的应用页面
+# / 的响应是反代跳到 /docs 的 Swagger 页，页面上没有 vllm 字样（FastAPI 默认标题）；
+# 用 vLLM 自己的 /version 断言身份（经网关时密钥已由代登录注入）。
+web_assert() {
+  local v
+  v="$(web_get /version)" || { echo "/version 请求失败：$v"; return 1; }
+  grep -qE '"version"\s*:\s*"[0-9]+(\.[0-9]+)+"' <<<"$v" ||
+    { echo "/version 响应不像 vLLM：$(head -c 120 <<<"$v")"; return 1; }
+}
