@@ -7,10 +7,31 @@
 #
 # vLLM：sso=proxy，网关给每个已登录请求注入 `Authorization: Bearer <api_key>`；
 # vLLM 没有用户和登录体系（IDENTITY_NA=1），身份完全由核心网关的会话保证。
-# 持久数据是模型缓存（用户下载的权重，装进数据目录），data_write/data_check
-# 验证它跨重装还在；没有别的用户数据。
+# 持久数据是模型缓存：清单把模型放在数据目录的 models/ 子路径（spec 的
+# ${WONTON_APP_DATA} 用法），data_write/data_check 验证它跨重装还在。
+# 没有别的用户数据。
+#
+# before_install 可设 VLLM_MODEL_SRC 指向一个现成的模型缓存目录（HF_HOME 布局），
+# 硬链接克隆进本实例的数据目录，省去重复下载；不设就由 vLLM 启动时自己下载。
 IDENTITY_NA=1
 SMOKE_NOTE="vLLM 没有用户体系；身份由核心网关会话保证"
+
+app_models_dir() { # 实例数据目录里挂模型的子路径（id 里的点在路径里原样保留）
+  echo "$SMOKE_STATE/data/apps/ai.vllm.vllm/models"
+}
+
+before_install() {
+  local src="${VLLM_MODEL_SRC:-}" dst
+  dst="$(app_models_dir)"
+  if [[ -z "$src" ]]; then
+    echo "VLLM_MODEL_SRC 没设，让 vLLM 首次启动时自己下模型"
+    return 0
+  fi
+  [[ -d "$src" ]] || { echo "VLLM_MODEL_SRC 不是目录：$src"; return 1; }
+  mkdir -p "$dst"
+  cp -al "$src/." "$dst/"
+  echo "已从 $src 硬链接克隆模型缓存（$(find "$dst" -type f ! -name '*.incomplete' ! -name '*.lock' | grep -c . || true) 个文件）"
+}
 
 # / 的响应是反代跳到 /docs 的 Swagger 页，页面上没有 vllm 字样（FastAPI 默认标题）；
 # 用 vLLM 自己的 /version 断言身份（经网关时密钥已由代登录注入）。
@@ -21,24 +42,28 @@ web_assert() {
     { echo "/version 响应不像 vLLM：$(head -c 120 <<<"$v")"; return 1; }
 }
 
-# 数据探针：vLLM 的持久数据是模型缓存（用户下载的模型权重，装进数据目录）。
-# data_write 把缓存指纹记进 $SMOKE_STATE/data-marker；data_check 在重装（保数据）
+# 数据探针：vLLM 的持久数据是模型缓存（用户下载的模型权重，装进数据目录的 models/）。
+# data_write 把数据目录指纹记进 $SMOKE_STATE/data-marker；data_check 在重装（保数据）
 # 之后核对缓存还在。指纹只记"文件名:大小"且跳过 .incomplete 和 .lock：
 # HF 下载支持断点续传，已完成的不完整分片会被改名、锁文件用完即删，
 # 只记完成的文件，后台还在下的新文件不影响核对。
 data_write() {
-  local dir="$SMOKE_STATE/data/apps/ai-vllm-vllm/models/huggingface"
-  local out="$SMOKE_STATE/data-marker"
+  local dir out n
+  dir="$(app_models_dir)"
+  out="$SMOKE_STATE/data-marker"
   [[ -d "$dir" ]] || { echo "模型缓存目录不存在：$dir"; return 1; }
   {
     echo "dir=$dir"
     find "$dir" -type f ! -name '*.incomplete' ! -name '*.lock' -printf '%P\t%s\n' | sort
   } >"$out" || return 1
-  echo "标记写入 $out（$(tail -n +2 "$out" | grep -c .) 个文件）"
+  n=$(tail -n +2 "$out" | grep -c . || true)
+  (( n > 0 )) || { echo "数据目录里一个模型文件都没有：$dir"; return 1; }
+  echo "标记写入 $out（$n 个文件）"
 }
 
 data_check() {
-  local out="$SMOKE_STATE/data-marker" dir path expect have n=0
+  local out dir path expect have n=0
+  out="$SMOKE_STATE/data-marker"
   [[ -s "$out" ]] || { echo "没有 data_write 写的标记：$out"; return 1; }
   dir="$(sed -n 's/^dir=//p' "$out")"
   [[ -d "$dir" ]] || { echo "模型缓存目录没了：$dir"; return 1; }
