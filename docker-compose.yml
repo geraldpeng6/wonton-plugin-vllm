@@ -30,8 +30,10 @@ services:
     # 单卡不需要 ipc: host（最高级权限），加共享内存给 PyTorch 就够
     shm_size: 1g
     healthcheck:
-      # /health 不要求 API key，查的是服务真的能应答，不只是进程活着
-      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=5)"]
+      # /health 不要求 API key，查的是服务真的能应答，不只是进程活着。
+      # urllib 和 curl 一样会读 http_proxy 环境变量（本机配了出口代理时会把
+      # 127.0.0.1 的请求送进代理），显式给个空代理表。
+      test: ["CMD", "python3", "-c", "import urllib.request as u; u.urlopen('http://127.0.0.1:8000/health', timeout=5, opener=u.build_opener(u.ProxyHandler({})))"]
       interval: 60s
       timeout: 10s
       start_period: 45m
