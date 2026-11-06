@@ -13,7 +13,6 @@ services:
       - "8192"
       - --gpu-memory-utilization
       - "0.8"
-      - --disable-log-requests
       # /docs 用镜像自带的静态资源，不依赖外网 CDN（小程序 WebView 里也能打开）
       - --enable-offline-docs
     environment:
