@@ -22,7 +22,7 @@ IDENTITY_NA=1
 SMOKE_NOTE="vLLM 没有用户体系；身份由核心网关会话保证"
 
 app_models_dir() { # 实例数据目录里挂模型的子路径（id 里的点在路径里原样保留）
-  echo "$SMOKE_STATE/data/apps/ai.vllm.vllm/models"
+  echo "$SMOKE_STATE/data/apps/ai-vllm-vllm/models"
 }
 
 common_prefix() { # 两个绝对路径的公共前缀目录；没有公共前缀（跨文件系统）时失败
