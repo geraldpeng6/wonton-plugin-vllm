@@ -63,13 +63,12 @@ before_install() {
   echo "已确保 $dst 有模型缓存"
 }
 
-# / 的响应是反代跳到 /docs 的 Swagger 页，页面上没有 vllm 字样（FastAPI 默认标题）；
-# 用 vLLM 自己的 /version 断言身份（经网关时密钥已由代登录注入）。
+# / 的响应是插件根页：meta 跳转到 /docs，标题 vLLM；页面上没有 vllm 字样的
+# JSON（那是 /version 接口）。用根页自身的特征断言身份；网关对匿名请求返回 401
+# 由探针主干另行验证。
 web_assert() {
-  local v
-  v="$(web_get /version)" || { echo "/version 请求失败：$v"; return 1; }
-  grep -qE '"version"\s*:\s*"[0-9]+(\.[0-9]+)+"' <<<"$v" ||
-    { echo "/version 响应不像 vLLM：$(head -c 120 <<<"$v")"; return 1; }
+  grep -q '<title>vLLM</title>' || return 1
+  grep -q 'url=/docs' || return 1
 }
 
 # 数据探针：vLLM 的持久数据是模型缓存（用户下载的模型权重，装进数据目录的 models/）。
