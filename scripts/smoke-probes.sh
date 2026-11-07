@@ -59,8 +59,8 @@ before_install() {
   fi
   docker run --rm -v "$prefix:/rootfs" \
     nginx:1.31.7-alpine@sha256:892bb2152464f0c5d8972593a5f5afaf8054552580b699d95f8ff4af08c2d33d \
-    sh -c "mkdir -p '/rootfs$dst_rel' && cp -al '/rootfs$src_rel/.' '/rootfs$dst_rel/'$chown_cmd"
-  echo "已从 $src 硬链接克隆模型缓存到 $dst"
+    sh -c "mkdir -p '/rootfs$dst_rel'; if [ -n \"\$(ls -A '/rootfs$dst_rel' 2>/dev/null)\" ]; then echo '目标已有缓存，跳过克隆'; else cp -al '/rootfs$src_rel/.' '/rootfs$dst_rel/'$chown_cmd && echo CLONED; fi"
+  echo "已确保 $dst 有模型缓存"
 }
 
 # / 的响应是反代跳到 /docs 的 Swagger 页，页面上没有 vllm 字样（FastAPI 默认标题）；
