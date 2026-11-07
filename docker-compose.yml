@@ -33,6 +33,12 @@ services:
       # hf-mirror 不支持 xet 协议（CAS 走 xethub.hf.co），缓存命中时 xet 客户端仍会
       # 出网校验并挂死（本机实测装载卡 10 分钟）；禁掉后首跑下载与缓存装载都走 HTTP。
       HF_HUB_DISABLE_XET: "1"
+    # 模型缓存完整则离线装载、缺失则在线首跑下载，判定逻辑见 entrypoint 脚本
+    # （实测缓存命中时 hf-mirror 远端校验仍会发起大文件下载并挂死，装载几小时不结束）
+    entrypoint: [/bin/sh, /wonton-entrypoint/entrypoint.sh]
+    configs:
+      - source: entrypoint
+        target: /wonton-entrypoint/entrypoint.sh
     volumes:
       - ${WONTON_APP_DATA}/models:/data/models
       # torch.compile 缓存：容器重建后不重编译（上游文档 Faster Startup 一节）
@@ -66,6 +72,8 @@ services:
 configs:
   nginx:
     file: web/default.conf
+  entrypoint:
+    file: web/entrypoint.sh
 
 x-wonton:
   spec: "0.6"
