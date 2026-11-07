@@ -16,7 +16,9 @@ OpenAI 兼容接口（`/v1/chat/completions` 等）。使用显卡（NVIDIA）�
 首次启动时从 Hugging Face 下载模型到插件数据目录（`models/huggingface/`），之后不再
 重复下载；所以首次启动要等一段下载时间，删除数据目录重装会重新下载。直连
 Hugging Face 超时的网络默认走 `hf-mirror.com` 镜像站（`HF_ENDPOINT`，可改回上游默认）；
-用核心的出口代理时也可以直接连上游。上下文长度默认
+用核心的出口代理时也可以直接连上游。模型缓存完整后，装载入口脚本检测到缓存齐全就
+以离线模式加载（`web/entrypoint.sh`）：实测缓存命中时 hf-mirror 的远端校验仍会对
+大分片发起新下载且长时间 0 字节，离线装载暖缓存 3 秒内完成。上下文长度默认
 8192，`--gpu-memory-utilization 0.8`，都写在 `docker-compose.yml` 的 `command` 里。
 
 ## 接口地址
