@@ -12,7 +12,10 @@
 # 没有别的用户数据。
 #
 # before_install 可设 VLLM_MODEL_SRC 指向一个现成的模型缓存目录（HF_HOME 布局），
-# 硬链接克隆进本实例的数据目录，省去重复下载；不设就由 vLLM 启动时自己下载。
+# 克隆进本实例的数据目录，省去重复下载；不设就由 vLLM 启动时自己下载。
+# 数据目录由核心容器建为 root 属主，宿主用户写不进去，克隆在容器里做；
+# 源和目标必须同在一个文件系统（硬链接才成立），否则如实跳过、走下载。
+# 克隆用清单里 web 服务的同一个 nginx 镜像（装插件前可能还没拉过，先 docker pull）。
 IDENTITY_NA=1
 SMOKE_NOTE="vLLM 没有用户体系；身份由核心网关会话保证"
 
@@ -20,17 +23,36 @@ app_models_dir() { # 实例数据目录里挂模型的子路径（id 里的点�
   echo "$SMOKE_STATE/data/apps/ai.vllm.vllm/models"
 }
 
+common_prefix() { # 两个绝对路径的公共前缀目录；没有公共前缀（跨文件系统）时失败
+  local a="$1" b="$2" out="" i
+  local -a A B
+  IFS=/ read -ra A <<<"$a"
+  IFS=/ read -ra B <<<"$b"
+  for i in "${!A[@]}"; do
+    [[ "${A[i]:-}" == "${B[i]:-}" ]] || break
+    out+="/${A[i]}"
+  done
+  [[ -n "$out" ]] || return 1
+  echo "$out"
+}
+
 before_install() {
-  local src="${VLLM_MODEL_SRC:-}" dst
+  local src="${VLLM_MODEL_SRC:-}" dst prefix
   dst="$(app_models_dir)"
   if [[ -z "$src" ]]; then
     echo "VLLM_MODEL_SRC 没设，让 vLLM 首次启动时自己下模型"
     return 0
   fi
   [[ -d "$src" ]] || { echo "VLLM_MODEL_SRC 不是目录：$src"; return 1; }
-  mkdir -p "$dst"
-  cp -al "$src/." "$dst/"
-  echo "已从 $src 硬链接克隆模型缓存（$(find "$dst" -type f ! -name '*.incomplete' ! -name '*.lock' | grep -c . || true) 个文件）"
+  prefix=$(common_prefix "$src" "$dst") || {
+    echo "源和目标不在同一文件系统，跳过克隆，让 vLLM 自己下载"
+    return 0
+  }
+  local src_rel=${src#"$prefix"} dst_rel=${dst#"$prefix"}
+  docker run --rm -v "$prefix:/rootfs" \
+    nginx:1.31.7-alpine@sha256:892bb2152464f0c5d8972593a5f5afaf8054552580b699d95f8ff4af08c2d33d \
+    sh -c "mkdir -p '$dst_rel' && cp -al '$src_rel/.' '$dst_rel/'"
+  echo "已从 $src 硬链接克隆模型缓存到 $dst"
 }
 
 # / 的响应是反代跳到 /docs 的 Swagger 页，页面上没有 vllm 字样（FastAPI 默认标题）；
