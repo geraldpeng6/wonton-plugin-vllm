@@ -67,8 +67,9 @@ before_install() {
 # JSON（那是 /version 接口）。用根页自身的特征断言身份；网关对匿名请求返回 401
 # 由探针主干另行验证。
 web_assert() {
-  grep -q '<title>vLLM</title>' || return 1
-  grep -q 'url=/docs' || return 1
+  local page
+  page="$(cat)"
+  grep -q '<title>vLLM</title>' <<<"$page" && grep -q 'url=/docs' <<<"$page"
 }
 
 # 数据探针：vLLM 的持久数据是模型缓存（用户下载的模型权重，装进数据目录的 models/）。
