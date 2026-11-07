@@ -22,6 +22,10 @@ services:
       # 网关代登录：vLLM 认固定 API key（--api-key 的环境变量写法），核心把密钥
       # 注入已登录用户的请求；vLLM 自己不认识用户。
       VLLM_API_KEY: ${WONTON_SECRET_API_KEY}
+      # torch/OMP 默认按宿主核数起全核线程池：上百核主机上装载权重时上百线程
+      # 全部 futex 等待（实测 137 线程死锁、CPU 零推进）。限 8 线程，装载走
+      # PCIe 并行 8 流本就够，与核数解耦。
+      OMP_NUM_THREADS: "8"
       HF_HOME: /data/models/huggingface
       # 直连 huggingface.co 超时的主机（本机实测超时，hf-mirror.com 200）走国内镜像站；
       # 配了核心出口代理的主机也可以改回上游默认。
