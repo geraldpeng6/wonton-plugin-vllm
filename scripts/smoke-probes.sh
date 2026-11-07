@@ -32,6 +32,8 @@ common_prefix() { # 两个绝对路径的公共前缀目录；没有公共前缀
   IFS=/ read -ra B <<<"$b"
   for i in "${!A[@]}"; do
     [[ "${A[i]:-}" == "${B[i]:-}" ]] || break
+    # 开头的空段（前导斜杠）不参与拼接，否则前缀会变成 //mnt/…
+    [[ -z "${A[i]}" ]] && continue
     out+="/${A[i]}"
   done
   [[ -n "$out" ]] || return 1
@@ -53,11 +55,11 @@ before_install() {
   local src_rel=${src#"$prefix"} dst_rel=${dst#"$prefix"}
   local chown_cmd=""
   if [[ -n "${VLLM_CLONE_UID:-}" && -n "${VLLM_CLONE_GID:-}" ]]; then
-    chown_cmd=" && chown -R $VLLM_CLONE_UID:$VLLM_CLONE_GID '$dst_rel'"
+    chown_cmd=" && chown -R $VLLM_CLONE_UID:$VLLM_CLONE_GID '/rootfs$dst_rel'"
   fi
   docker run --rm -v "$prefix:/rootfs" \
     nginx:1.31.7-alpine@sha256:892bb2152464f0c5d8972593a5f5afaf8054552580b699d95f8ff4af08c2d33d \
-    sh -c "mkdir -p '$dst_rel' && cp -al '$src_rel/.' '$dst_rel/'$chown_cmd"
+    sh -c "mkdir -p '/rootfs$dst_rel' && cp -al '/rootfs$src_rel/.' '/rootfs$dst_rel/'$chown_cmd"
   echo "已从 $src 硬链接克隆模型缓存到 $dst"
 }
 
