@@ -13,6 +13,9 @@ services:
       - "8192"
       - --gpu-memory-utilization
       - "0.8"
+      # 免掉 CUDA 图捕获：装载时长从不可控（图捕获 1-2 分钟，挤爆核心 300 秒
+      # 安装健康门）变成确定；本地推理吞吐略降，README 写明。
+      - --enforce-eager
       # /docs 用镜像自带的静态资源，不依赖外网 CDN（小程序 WebView 里也能打开）
       - --enable-offline-docs
     environment:
