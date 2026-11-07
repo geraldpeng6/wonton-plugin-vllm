@@ -23,6 +23,9 @@ services:
       # 直连 huggingface.co 超时的主机（本机实测超时，hf-mirror.com 200）走国内镜像站；
       # 配了核心出口代理的主机也可以改回上游默认。
       HF_ENDPOINT: https://hf-mirror.com
+      # hf-mirror 不支持 xet 协议（CAS 走 xethub.hf.co），缓存命中时 xet 客户端仍会
+      # 出网校验并挂死（本机实测装载卡 10 分钟）；禁掉后首跑下载与缓存装载都走 HTTP。
+      HF_HUB_DISABLE_XET: "1"
     volumes:
       - ${WONTON_APP_DATA}/models:/data/models
       # torch.compile 缓存：容器重建后不重编译（上游文档 Faster Startup 一节）
