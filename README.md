@@ -13,6 +13,8 @@ OpenAI 兼容接口（`/v1/chat/completions` 等）。使用显卡（NVIDIA）�
 | 最低显存 | 24 GB（权重建模约 16.4 GB 加运行开销） |
 | 推荐显存 | 32 GB |
 
+0.33 起上游只发布 CUDA 13.0 镜像（CUDA 12.9 已停发），宿主机的 NVIDIA 驱动要 580.65.06 及以上。
+
 首次启动时从 Hugging Face 下载模型到插件数据目录（`models/huggingface/`），之后不再
 重复下载；所以首次启动要等一段下载时间，删除数据目录重装会重新下载。直连
 Hugging Face 超时的网络默认走 `hf-mirror.com` 镜像站（`HF_ENDPOINT`，可改回上游默认）；
