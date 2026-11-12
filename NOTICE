@@ -1,8 +1,9 @@
 版权
 ====
 
-上游 vLLM 代码与标志版权归 vLLM 项目贡献者所有
-（上游仓库 vllm-project/vllm，本插件基于的版本 v0.32.0 的 LICENSE 文件）。
+上游 vLLM 源码文件头的声明是
+`SPDX-FileCopyrightText: Copyright contributors to the vLLM project`
+（本插件基于的版本 v0.32.0，如 `vllm/config.py`），标志版权同属 vLLM 项目贡献者。
 
 许可证
 --------
