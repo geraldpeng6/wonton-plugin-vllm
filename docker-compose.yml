@@ -80,10 +80,10 @@ x-wonton:
   id: ai.vllm.vllm
   version: 0.1.0
   kind: model
-  title: { en: vLLM }
+  title: { zh: 高速 AI 模型（vLLM）, en: High-Speed AI Models (vLLM) }
   description:
-    zh: 在自己家里跑本地大模型推理，提供 OpenAI 兼容接口
-    en: Run local large-model inference at home with an OpenAI-compatible API
+    zh: 在家里服务器的 NVIDIA 显卡上高速运行 AI 模型，多人同时用也不卡；默认模型要 24 GB 以上显存，适合显卡好、用的人多的家庭。
+    en: Run AI models fast on your home server's NVIDIA graphics card, smooth even with many people at once. The default model needs 24 GB or more of video memory, so it suits homes with a powerful card.
   icon: icon.png
   notices: [NOTICE]
   screenshots: [screenshots/api-docs.png, screenshots/models.png]
@@ -96,7 +96,7 @@ x-wonton:
     en: [AI]
   about:
     zh: |
-      在自己家里跑 vLLM，用本机 NVIDIA 显卡做大模型推理，数据不出门。
+      在自己家里跑 vLLM，用本机 NVIDIA 显卡运行 AI 模型，数据不出门。
 
       默认加载 Qwen3-8B（下载约 16.4 GB，需要 24 GB 以上显存），首次启动时下载到
       插件数据目录，之后不再重复下载。打开插件网页就是 OpenAI 兼容接口的文档页，
@@ -106,8 +106,8 @@ x-wonton:
       以后可在“模型设置”（模型网关）里把这个地址注册成自定义 provider，让所有
       Bot 都用上本地模型；前提是网关容器能访问插件网络，见插件 PR 的说明。
     en: |
-      Run vLLM at home and serve large models from your own NVIDIA GPU, keeping
-      data on your machine.
+      Run vLLM at home and serve AI models from your own NVIDIA graphics card, with
+      data staying on your machine.
 
       It loads Qwen3-8B by default (about 16.4 GB download, needs 24 GB+ of VRAM)
       into the plugin data directory on first start. The plugin page is the
