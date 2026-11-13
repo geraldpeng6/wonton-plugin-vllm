@@ -1,6 +1,6 @@
 # 云吞插件：vLLM
 
-开发流程见[插件开发指南](https://github.com/geraldpeng6/wonton-docs/blob/main/develop.md)。
+开发流程见[插件开发指南](https://github.com/wontonapp/wonton-docs/blob/main/develop.md)。
 
 在自己家里跑 vLLM 推理服务：官方 `vllm/vllm-openai` 镜像，加载一个本地大模型，提供
 OpenAI 兼容接口（`/v1/chat/completions` 等）。使用显卡（NVIDIA），显存不够装不上。
